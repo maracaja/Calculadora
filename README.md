@@ -25,6 +25,7 @@ Segue abaixo a descrição do código-fonte, contido na pasta do projeto como ma
 
 -   Em `examples/CMakeLists.txt`, foi adicionada a instrução `add_subdirectory(atividade1)`, sendo comentada a instrução original;
 -   Em `public`, além dos arquivos gerados pela compilação do WASM, a página `helloworld.html` foi modificada para que o canvas possa conter toda a janela da aplicação, configurada para 800 x 725 (linhas 48-49). Também foi modificada a linha 258 para que a página execute o arquivo `atividade1.js`;
+-   A pasta `docs` foi criada com os arquivos compilados pelo `build-wasm` e o `helloworld.html`, visando a criação do site no GitHub Pages;
 -   Na pasta `atividade1`:
     -   Em `CMakeLists.txt`, foi definido o nome do projeto na linha 1, enquanto na linha 2, foi adicionado o arquivo `calculadora.cpp`;
     -   Em `assets`, foram adicionados os arquivos de fonte para Arial Black e formato de 7 segmentos (`Seven_Segment.ttf`).
@@ -142,7 +143,7 @@ A partir daqui, usou-se o padrão de criação de botões usado no exemplo do Jo
 Além das considerações elencadas acima, os botões da calculadora são implementados como segue:
 -   Entre as linhas 93 e 95, aplica-se a cor azul para os próximos 4 botões (`PopStyleColor()` é aplicado na linha 112):
     -   Nas linhas 98 e 99, é criado o botão **MR** que, ao ser clicado, aciona o método `resultMemoria()`;
-    -   Nas linhas 102 e 103, é criado o botão **MC** que, ao ser clicado, aciona o método `zeraMemoria()`;~
+    -   Nas linhas 102 e 103, é criado o botão **MC** que, ao ser clicado, aciona o método `zeraMemoria()`;
     -   Nas linhas 106 e 107, é criado o botão **M+** que, ao ser clicado, aciona o método `colocaMemoria`, passando `true` como parâmetro, somando o valor em tela à memória;
     -   Nas linhas 110 e 111, é criado o botão **M-** que, ao ser clicado, aciona o método `colocaMemoria`, passando `false` como parâmetro, sdubtraindo o valor em tela à memória;
 -   Entre as linhas 115 e 120, é criado o botão **ON/C**, que chama a função `limpa()` da calculadora, responsável pela redefinição dos dados ou do acionamento do dispositivo simulado. Somente este botão foi configurado com a cor vermelha;
@@ -177,23 +178,23 @@ Este arquivo possui a implementação dos métodos listados no item `calculadora
 
 Apesar de estarem no fim do arquivo, estes trechos de código serão descritos antes, pois são utilizados em muitos dos métodos públicos.
 
-##### habilitado() — linhas 241 a 244
+##### habilitado() — linhas 240 a 243
 
-Este método retorna um booleano que informa se a calculadora está ligada e não está em estado de erro (linha 243). Nos métodos onde é chamado, a simulação não responderá aos comandos dos botões caso uma dessas situações ocorra.
+Este método retorna um booleano que informa se a calculadora está ligada e não está em estado de erro (linha 242). Nos métodos onde é chamado, a simulação não responderá aos comandos dos botões caso uma dessas situações ocorra.
 
-##### resetEntrada() — linhas 246 a 254
+##### resetEntrada() — linhas 245 a 253
 
 Este método redefine a entrada do usuário para os valores iniciais:
--   `cont` com o valor 0 indica que nenhum algarismo foi inserido (linha 248);
--   `dec` com o valor 0 indica que a casa das unidades está no último algarismo apresentado na tela (linha 249);
--   `pt` com o valor falso indica que o ponto decimal ainda não foi digitado (linha 250);
--   `sinal` com o valor falso (linha 251) indica que o sinal não foi digitado e o valor inicial é não-negativo (esperado para um valor inicial igual a zero);
--   `zeraBuffer()` chamado na linha 252 atribui o valor de entrada inicial igual a zero, conforme o próximo subtítulo;
--   `disp` com o estado `Display::DIGIT` habilita a entrada para a inserção de um número pelo usuário (linha 253).
+-   `cont` com o valor 0 indica que nenhum algarismo foi inserido (linha 247);
+-   `dec` com o valor 0 indica que a casa das unidades está no último algarismo apresentado na tela (linha 248);
+-   `pt` com o valor falso indica que o ponto decimal ainda não foi digitado (linha 249);
+-   `sinal` com o valor falso (linha 250) indica que o sinal não foi digitado e o valor inicial é não-negativo (esperado para um valor inicial igual a zero);
+-   `zeraBuffer()` chamado na linha 251 atribui o valor de entrada inicial igual a zero, conforme o próximo subtítulo;
+-   `disp` com o estado `Display::DIGIT` habilita a entrada para a inserção de um número pelo usuário (linha 252).
 
-##### zeraBuffer() — linhas 256 a 259
+##### zeraBuffer() — linhas 255 a 258
 
-Este método atua zerando o vetor que atua como buffer dos dígitos de entrada. Trata-se apenas de um laço `for` que percorre todo o vetor `bufferDisplay` igualando todos os seus valores a 0 (linha 258).
+Este método atua zerando o vetor que atua como buffer dos dígitos de entrada. Trata-se apenas de um laço `for` que percorre todo o vetor `bufferDisplay` igualando todos os seus valores a 0 (linha 257).
 
 #### Calculadora() — linhas 9 a 13
 
@@ -204,46 +205,104 @@ Este é o construtor da classe. Na linha 11, o método define que o objeto é cr
 Este método traduz o vetor de dígitos inseridos pelo usuário em um número no formato `double` que pode ser computado internamente.
 Na linha 17, a variável `num` é criada com o valor inicial 0. O laço das linhas 18 e 19 incrementa a `num` o valor dos dígitos do mais ao menos significativo, usando `cont` e `dec` para determinar a potência de 10 pela qual este dígito será multiplicado. Na linha 20, a variável sinal indicará se o valor que será retornado é negativo ou não.
 
-#### calcula()
+#### calcula() — linhas 23 a 54
 
-#### colocaMemoria(bool soma)
+Este método basicamente é a alma do negócio: realiza todas as contas, com exceção das envolvendo porcentagem ou a raiz quadrada. Como já é de se esperar, este método só atua se a instância de Calculadora está caracterizada como ligada e em funcionamento normal.
+O booleano `pos` indica se o número em `acc` é positivo (linha 27), já `n` representa um possível operando (linha 28), com a entrada futura redefinida na linha 29.
+A partir da operação selecionada (`switch` da linha 30), temos:
+-   Na linha 32, temos a soma do acumulador com o operando `n`;
+-   Na linha 33, temos o valor do acumulador subtraído do operando `n`;
+-   Entre as linhas 34 e 38, é realizada a multiplicação entre o acumulador e `n`; nas linhas 36 e 37 é detectado um possível _overflow_ na aritmética do processador (sinalizado por fatores de mesmo sinal e resultado negativo) — neste caso, o modo de erro é acionado;
+-   Entre as linhas 39 e 47, é realizada a divisão: na linha 40, um erro é atribuído quando o divisor é zero; de outra forma a divisão é calculada (linha 43) e, como no caso anterior, testa-se o _overflow_ e o correspondente feedback (linhas 44-45).
+-   Em caso de não haver nenhuma operação, `n` é armazenado em `acc`, sem nenhuma ação aparente na visualização.
+Se o valor da operação matemática exceder um valor que possa ser exibido em 16 dígitos (ou seja, maior que 10¹⁶), então o estado de funcionamento também é configurado como `EstadoLigado::ERRO` (linha 50). Se tudo correr bem, então o modo de display muda para a apresentação do resultado (linha 51) e o modo de operação é resetado (linha 52).
 
-#### desliga() — linhas 71 a 74
+#### colocaMemoria(bool soma) — linhas 56 a 69
+
+Este método implementa a adição de números digitados ou calculados à memória do dispositivo. O booleano `soma` passado como parâmetro define se esta adição será do valor positivo ou negativo, fazendo com que este trecho de código seja utilizado tanto pelo botão **M+** como no **M-**.
+-   O `if` da linha 58 faz com que esta funcionalidade apenas atue quando a calculadora está ligada e sem erro;
+-   Na linha 60, é tratado o caso em que o valor a ser adicionado à memória foi digitado pelo usuário;
+-   Na linha 62, é realizada a operação matemática previamente selecionada, se houver; senão (linha 63) o valor no buffer de entrada deve ser convertido para `double` e passado ao acumulador `acc`;
+-   Na linha 64, é definido que será exibido o resultado do acumulador;
+-   Na linha 66, é definido se o valor em `acc` é somado à memória (se `soma` vale `true`) ou então subtraído (se `false`).
+
+#### desliga() — linhas 70 a 73
 
 Este método apenas altera o estado geral do objeto para desligado (linha 73).
 
-#### digita(int n)
+#### digita(int n) — linhas 75 a 94
 
-#### exibicao()
+Este método permite a recepção da entrada de um valor numérico pelo usuário e exibe na tela sua situação em dado instante de tempo. A princípio é avaliado se o valor de `habilitado()` é `true`, caso em que o dispositivo responderá às entradas digitadas (linha 77).
+Se estiver previamente sendo exibido um resultado calculado (modo `Display::RESULT`), o modo é alterado para `Display::DIGIT` e as variáveis associadas à entrada de informações são redefinidas para os valores iniciais (linhas 79-83).
+Se inserido um dígito '0', este é contado para fins de exibição na tela (linha 84). Um possível bug devido à contagem de um dígito extra é corrigido eliminando possível zero à esquerda na linha 90.
+Se o limite de dígitos não foi atingido ou não estão sendo inseridos zeros adicionais em um valor que já vale zero (condição da linha 85), os dígitos do buffer são deslocados de forma que o novo dígito ocupe o lugar do menos significativo (linhas 87-89).
+Por fim, se o ponto decimal já foi digitado em algum momento, este também é deslocado (linha 91).
 
-#### inverteSinal()
+#### exibicao() — linhas 96 a 113
 
-#### isError() — linhas 125 a 129
+Este método caracteriza a sequência de caracteres a ser apresentada na parte do display reservada ao número para os diferentes contextos possíveis.
+Nas linhas 98 e 99, são declarados a `string` s, usada para o processamento interno, e o `char*` arr, que será a referência retornada na linha 112.
+Caso a calculadora esteja desligada ou apontando erro (linha 100), arr será uma string contendo apenas o caractere de fim de string e nenhum valor será exibido no display (linhas 102 e 103).
+Se estiver em funcionamento normal, `s` recebe o valor convertido do buffer de entrada (caso esteja em modo de digitação) ou então o valor de `acc`, convertido para o formato decimal em no máximo 16 algarismos (linha 107). No caso específico de ser um número inteiro e portanto `s` não possuir um caractere '.', este é adicionado ao final da string, visando imitar a apresentação de uma calculadora convencional, onde o ponto aparece no final do número, se inteiro (linha 108).
+Ao fim, a string é convertido para array de caracteres (linhas 109-110), que será retornado ao fim da execução.
 
-Este método indica se a calculadora está em situação de erro ou não. Para tal, o `if-else` observa primeiro se a calculadora está desligada, retornando `false` em caso afirmativo (linha 127). Em caso contrário, verifica se a variável `est` tem o valor de `ERRO`, sendo o resultado desta comparação o valor de retorno (linha 128).
+#### inverteSinal() — linhas 115 a 122
 
-#### limpa()
+Este método inverte o sinal do número apresentado no display. Primeiro é testado se a simulação aceita comandos (linha 117). Em caso positivo, verifica-se se a tela está apresentando dados digitados e se esse valor é diferente de zero (para impedir a apresentação de um valor "-0"). Se sim, `sinal` é negado, gerando a inversão (linha 119).
+Porém, se estiver sendo apresentado o valor de `acc` em tela, este valor é diretamente negativado, tendo portanto seu sinal invertido ou caso seja zero, não se altera (linha 120).
 
-#### limpaEntrada() — linhas 140 a 143
+#### isError() — linhas 124 a 128
 
-Este método limpa a entrada do usuário, mas só executa o método privado `resetEntrada()` caso a calculadora esteja habilitada a este comando (usando o método também privado `habilitado()`), conforme a cláusula `if` da linha 142.
+Este método indica se a calculadora está em situação de erro ou não. Para tal, o `if-else` observa primeiro se a calculadora está desligada, retornando `false` em caso afirmativo (linha 126). Em caso contrário, verifica se a variável `est` tem o valor de `ERRO`, sendo o resultado desta comparação o valor de retorno (linha 127).
 
-#### ponto()
+#### limpa() — linhas 130 a 137
 
-#### porcentagem()
+Este método acumula duas funções. A primeira delas está na linha 132, que torna o estado armazenado em `lig` para `EstadoGeral::ON` caso esta esteja definida como desligada, "ligando" o objeto `calc`. Uma vez garantido que o dispositivo está ligado, os valores armazenados são redefinidos para seus valores iniciais, com exceção da memória.
+Assim, `est` é definida como `EstadoLigado::NORMAL`, que torna este método o único que reverte um estado de erro (linha 133); `op` é atribuído como `Operacao::NADA`, reiniciando as operações matemáticas (linha 134); `acc` recebe o valor 0 (linha 135) e a entrada do usuário é limpa na chamada do método `resetEntrada()`.
 
-#### raiz()
+#### limpaEntrada() — linhas 139 a 142
 
-#### resultMemoria() — linhas 199 a 206
+Este método limpa a entrada do usuário, mas só executa o método privado `resetEntrada()` caso a calculadora esteja habilitada a este comando (usando o método também privado `habilitado()`), conforme a cláusula `if` da linha 141.
 
-Caso a calculadora esteja habilitada para receber comandos (`if` da linha 201), o acumulador recebe o valor da memória e o display é habilitado para exibir o valor do acumulador (o estado `disp` é modificado para `Display::RESULT`), conforme linhas 203 e 204.
+#### ponto() — linhas 144 a 156
 
-#### seleciona(char c)
+Este método garante a devida inserção do separador decimal. Seu funcionamento só ocorre se a calculadora está ligada e sem erro, e se `pt` for `false`, o que implica que o ponto não foi digitado antes neste mesmo número (linha 146).
+Se um resultado de acumulador estiver sendo exibido (conforme apontado pelo estado `Display::RESULT` na linha 148), ao digitar um ponto, o modo de tela é alterado para mostrar a digitação (linha 150), bem como a entrada é redefinida (linha 151).
+Se a entrada foi redefinida (linha 153), `cont` é atualizada para fazer constar um 0 na casa das unidades (digitar a sequência ".13", por exemplo, implica na entrada de valor entendida como "0.13").
+Por fim, `pt` recebe o valor `true`, garantindo a presença de um único ponto decimal, no máximo.
 
-#### temMemoria() — linhas 230 a 234
+#### porcentagem() — linhas 158 a 177
 
-Este método retorna um booleano que informa se há um dado diferente de zero armazanado na memória do dispositivo simulado. Caso a calculadora esteja desligada, retornará falso (linha 232), pois este valor é usado para gerar um texto indicativo segundo descrito em `window.cpp`. Caso a calculadora esteja ligada, informa sobre haver um valor não-nulo armazenado (linha 233).
+Este método responde pelos cálculos envolvendo porcentagem. Estes cálculos dependem de uma operação fundamental previamente selecionada. A condição `if` da linha 160 faz com que esta operação somente seja executada caso a calculadora esteja apta para receber entradas.
+A priori, a entrada referente à porcentagem é passada ao acumulador, se já não estiver armazenada, e carregada na variável `n` (linha 162). Na linha 163, o `switch` verifica a operação prévia:
+-   Na linha 65, tendo sido selecionada a soma, o acumulador tem seu valor acrescido de `n`% de seu valor;
+-   Na linha 66, tendo sido selecionada a subtração, o acumulador tem seu valor decrescido de `n`% de seu valor;
+-   Na linha 67, tendo sido selecionada a multiplicação, o acumulador tem seu valor multiplicado em `n`% (ou `n`/100);
+-   Na linha 68, tendo sido selecionada a divisão, o acumulador tem seu valor dividido por `n`/100;
+-   Na linha 69, a operação não é realizada caso nenhuma operação prévia tenha sido selecionada.
+Tendo sido selecionada alguma operação (linha 171), esta é definida internamente, após o cálculo, como `NADA`, e o modo de tela é alterado para que o resultado final seja apŕesentado.
 
-#### zeraMemoria() — linhas 236 a 239
+#### raiz() — linhas 179 a 195
 
-Este método apenas redefine a memória para 0 caso o objeto tenha o estado ligado (linha 238).
+Este método calcula a raiz quadrada do número que está sendo exibido no display. Como na maioria dos casos anteriores, só atua quando a calculadora está devidamente habilitada para receber entradas do usuário (linha 181).
+Na condição da linha 183, é avaliado se a entrada é um número negativo, no modo de `Display` vigente. Em caso afirmativo, a simulação vai ao estado de erro (linha 184), pois é uma operação inválida no conjunto dos números reais.
+Caso seja uma entrada válida (`else`, linha 185), verifica-se se a entrada estava sendo digitada (linha 187), sendo, neste caso, convertido o buffer de entrada em um número, cuja raiz quadrada é calculada e armazenada no acumulador, mudando o modo de exibição (linhas 189 e 190).
+Caso esta entrada já seja um valor previamente presente em `acc`, este valor é atualizado com o cálculo de sua própria raiz quadrada (linha 192).
+
+#### resultMemoria() — linhas 197 a 204
+
+Caso a calculadora esteja habilitada para receber comandos (`if` da linha 199), o acumulador recebe o valor da memória e o display é habilitado para exibir o valor do acumulador (o estado `disp` é modificado para `Display::RESULT`), conforme linhas 201 e 202.
+
+#### seleciona(char c) — linhas 206 a 226
+
+Este método permite definir a operação que será realizada por meio do reconhecimento do botão de uma operação básica. Como descrito em `window.cpp`, cada um destes quatro botões fornece um valor distinto para o parâmetro `c`. Mais uma vez, este método só irá operar se a calculadora estiver em seu funcionamento normal (linha 208).
+Se houver uma operação anterior pendente, esta será calculada e atribuída ao acumulador (linha 210). Em seguida, o valor de `c` entra em um seletor `switch` (linha 211). Daí, dependendo do caractere fornecido, uma das quatro operações fundamentais tem seu estado salvo visando a próxima conta (linhas 213-216). Em caso de um valor diverso (previsto apenas como proteção) o indicador de ausência de operação `NADA` é selecionado (linha 217).
+Em caso de não estar se operando sobre um valor calculado anteriormente (linha 219), este valor digitado é atribuído a `acc` (linha 221), redefinindo-se a entrada e mostrando o número inserido no display (linhas 222 e 223).
+
+#### temMemoria() — linhas 228 a 232
+
+Este método retorna um booleano que informa se há um dado diferente de zero armazanado na memória do dispositivo simulado. Caso a calculadora esteja desligada, retornará falso (linha 230), pois este valor é usado para gerar um texto indicativo segundo descrito em `window.cpp`. Caso a calculadora esteja ligada, informa sobre haver um valor não-nulo armazenado (linha 231).
+
+#### zeraMemoria() — linhas 234 a 237
+
+Este método apenas redefine a memória para 0 caso o objeto tenha o estado ligado (linha 236).

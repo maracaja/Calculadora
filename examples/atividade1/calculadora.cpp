@@ -62,7 +62,6 @@ void Calculadora::colocaMemoria(bool soma)
             if (op != Operacao::NADA) calcula();
             else acc = bufferParaNumero();     
             disp = Display::RESULT;
-
         }
         memoria += soma ? acc : -acc;
     }
@@ -84,11 +83,11 @@ void Calculadora::digita(int n)
         }
         if (n == 0 && cont == 0) cont++; // Caso em que entra um valor zero pela primeira vez
         else if (cont < TAM_DISPLAY && (((n == 0 && pt) || bufferParaNumero() != 0) || n != 0))
-        { // Demais casos, até o limite de dígitos
+        {   // Demais casos, até o limite de dígitos
             for (int i = cont; i > 0; i--)
                 bufferDisplay[i] = bufferDisplay[i - 1];
             bufferDisplay[0] = n;
-            cont++;
+            if (bufferDisplay[cont] != 0) cont++;
             if (pt) dec++;
         }
     }
@@ -96,7 +95,7 @@ void Calculadora::digita(int n)
 
 char* Calculadora::exibicao()
 {
-    std::string s;
+    string s;
     char *arr;
     if (!habilitado())
     {
@@ -133,7 +132,7 @@ void Calculadora::limpa()
     if (lig == EstadoGeral::OFF) lig = EstadoGeral::ON; // Se estiver desligada, liga a calculadora
     est = EstadoLigado::NORMAL;
     op = Operacao::NADA;
-    acc = 0;
+    acc = 0.0;
     resetEntrada();
 }
 
@@ -174,8 +173,7 @@ void Calculadora::porcentagem()
             op = Operacao::NADA;
             disp = Display::RESULT;
         }
-    }
-    
+    }    
 }
 
 void Calculadora::raiz()
